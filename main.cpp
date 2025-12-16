@@ -1,5 +1,5 @@
 #include <QApplication>
-#include "ui/SplashScreen.h"
+#include "ui/splashscreen.h"
 
 int main(int argc, char *argv[])
 {
