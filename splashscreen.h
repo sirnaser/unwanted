@@ -1,10 +1,25 @@
 #ifndef SPLASHSCREEN_H
 #define SPLASHSCREEN_H
 
-class SplashScreen
+#include <QWidget>
+
+namespace Ui {
+class SplashScreen;
+}
+
+class SplashScreen : public QWidget
 {
+    Q_OBJECT
+
 public:
-    SplashScreen();
+    explicit SplashScreen(QWidget *parent = nullptr);
+    ~SplashScreen();
+
+private slots:
+    void on_startButton_clicked();
+
+private:
+    Ui::SplashScreen *ui;
 };
 
-#endif // SPLASHSCREEN_H
+#endif
