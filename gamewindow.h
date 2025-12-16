@@ -1,16 +1,26 @@
-#ifndef GAMEMANAGER_H
-#define GAMEMANAGER_H
+#ifndef GAMEWINDOW_H
+#define GAMEWINDOW_H
 
-#include "player.h"
+#include <QWidget>
+#include "gamemanager.h"
 
-class GameManager
+namespace Ui {
+class GameWindow;
+}
+
+class GameWindow : public QWidget
 {
+    Q_OBJECT
+
 public:
-    GameManager(const Player &p1, const Player &p2);
+    explicit GameWindow(const QString &p1,
+                        const QString &p2,
+                        QWidget *parent = nullptr);
+    ~GameWindow();
 
 private:
-    Player player1;
-    Player player2;
+    Ui::GameWindow *ui;
+    GameManager *gameManager;
 };
 
 #endif
