@@ -33,6 +33,16 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         player.h player.cpp
         gamewindow.h gamewindow.cpp
         gamemanager.h gamemanager.cpp
+        Types.h
+        Config.h
+        Cell.h
+        Agent.h
+        Card.h
+        Deck.h
+        Player.h
+        Board.h
+        GameEngine.h
+        GameWindow.h
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET unwanted APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

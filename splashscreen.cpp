@@ -1,6 +1,4 @@
-#include "SplashScreen.h"
-#include "ui_SplashScreen.h"
-#include "LoginPage.h"
+#include "splashscreen.h"
 
 SplashScreen::SplashScreen(QWidget *parent)
     : QWidget(parent),
