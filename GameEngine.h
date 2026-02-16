@@ -42,11 +42,13 @@ public:
     bool checkWin() const;
 
     Player& getCurrentPlayer() { return players[currentTurn]; }
+    const Player& getCurrentPlayer() const { return players[currentTurn]; }
     const Player& getOpponent() const { return players[1 - currentTurn]; }
     const Board& getBoard() const { return board; }
-    int getCurrentTurn() const { return currentTurn; }
+    int getCurrentTurnIndex() const { return currentTurn; }
+    string getTurnStatus() const;
 
-    void printBoard() const;
+    void printGameState() const;
 };
 
 #endif // GAMEENGINE_H

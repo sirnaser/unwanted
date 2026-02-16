@@ -50,6 +50,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         Deck.cpp
         Card.cpp
         Player.cpp
+        Board.cpp
+        GameEngine.cpp
 
     )
 # Define target properties for Android with Qt 6 as:
