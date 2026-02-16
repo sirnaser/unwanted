@@ -25,53 +25,53 @@ private:
     GameEngine engine;
     AppState currentState = AppState::SPLASH;
 
-    // Core UI
+    // Core UI container
     QStackedWidget* stackWidget;
 
     // SPLASH page (Phase 1)
     QWidget* splashPage;
-    QVBoxLayout* splashLayout;
     QLabel* splashTitle;
-    QLabel* splashImage;  // QPixmap placeholder
+    QLabel* splashImageLabel;
     QPushButton* playButton;
 
     // LOGIN page (Phase 1)
     QWidget* loginPage;
-    QVBoxLayout* loginLayout;
     QLineEdit* name1Edit;
     QLineEdit* name2Edit;
     QListWidget* mapList;
     QPushButton* startGameButton;
 
-    // GAME page (Phase 1 Board + Phase 2 Logic)
+    // GAME page (Phase 1 board + Phase 2 logic)
     QWidget* gamePage;
-    QSplitter* gameSplitter;
-    QGridLayout* boardLayout;     // Dynamic square grid
-    QListWidget* cardList;        // Hand
-    QLabel* statusLabel;          // Turn info
+    QGridLayout* boardLayout;
+    QListWidget* cardList;
+    QLabel* statusLabel;
     QLabel* player1HUD;
     QLabel* player2HUD;
     QPushButton* endTurnButton;
 
-    // Selection state for game actions
+    // Selection state
     Cell* selectedCell = nullptr;
+    ActionType selectedAction = ActionType::MOVE;  // default
 
-    // Setup methods (clean code-only UI)
+    // Setup functions
     void setupSplashPage();
     void setupLoginPage();
     void setupGamePage();
+
+    // State switching
     void switchToState(AppState state);
 
-    // Phase 1: Login validation
+    // Phase 1 helpers
     bool validateName(const string& name) const;
     void loadMapList();
 
-    // Phase 1/2: UI updates
+    // Phase 1+2: UI refresh
     void updateBoardUI();
     void updateCardsUI();
     void updateHUD();
 
-    // Slots for interactions
+    // Slots
     void onPlayClicked();
     void onStartGameClicked();
     void onCellClicked(int row, int col);
