@@ -14,9 +14,9 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
+
+
+
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -24,15 +24,15 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
 
-        splashscreen.h splashscreen.cpp
 
 
-        loginpage.h loginpage.cpp
-        splashscreen.ui
-        loginpage.ui
-        player.h player.cpp
-        gamewindow.h gamewindow.cpp
-        gamemanager.h gamemanager.cpp
+
+
+
+
+
+
+
         Types.h
         Config.h
         Cell.h
@@ -45,6 +45,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         GameWindow.h
         GameState.h
         MainWindow.h
+        MainWindow.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET unwanted APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
