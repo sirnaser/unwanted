@@ -1,24 +1,9 @@
-// #include <QApplication>
-// #include "ui/splashscreen.h"
-
-// int main(int argc, char *argv[])
-// {
-//     QApplication a(argc, argv);
-
-//     SplashScreen splash;
-//     splash.show();
-
-//     return a.exec();
-// }
-
-
+#include "MainWindow.h"
 #include <QApplication>
-#include "mainwindow.h"
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-    return a.exec();
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+    MainWindow window;
+    window.show();
+    return app.exec();
 }
