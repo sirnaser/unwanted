@@ -6,6 +6,7 @@
 #include "Types.h"
 #include <set>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -14,16 +15,16 @@ public:
     string name;
     PlayerId id;
     Deck deck;
-    vector<Agent*> agents;
-    set<Cell*> controlledCells;
+    vector<Agent*> agents;           // Owned units on the board
+    set<Cell*> controlledCells;      // Cells under this player's control
 
-    Player(const string& n, PlayerId i);
-
-    void initAgents(const string& agentsFile, Board* board);  // forward in .cpp
-
-    bool hasWon(const WinCondition& wc) const;
+    Player(const string& playerName, PlayerId playerId);
+    void initAgents(const string& agentsFile, Board* board);
+    bool hasWon(const WinCondition& winCond) const;
 
     string getStatus() const;
+    int getLivingAgentsCount() const;
+    ~Player();
 };
 
 #endif // PLAYER_H
