@@ -8,12 +8,11 @@ void Deck::initDefault() {
         drawPile.emplace_back(ActionType::SCOUT);
     }
     for (int i = 0; i < 3; ++i) {
-        drawPile.emplace_back(ActionType::SNIPER);
+        drawPile.emplace_back(ActionType::ATTACK);
     }
     for (int i = 0; i < 3; ++i) {
-        drawPile.emplace_back(ActionType::SERGEANT);
+        drawPile.emplace_back(ActionType::CONTROL);
     }
-
     shuffle();
 }
 
@@ -31,9 +30,9 @@ void Deck::shuffle() {
 Card Deck::draw() {
     if (drawPile.empty()) {
         if (discardPile.empty()) {
-            return Card(ActionType::MOVE); // fallback dummy
+            return Card(ActionType::MOVE); // fallback
         }
-        shuffle(); // moves discard → draw
+        shuffle();
     }
 
     Card drawn = drawPile.front();
@@ -43,12 +42,10 @@ Card Deck::draw() {
 }
 
 void Deck::discardToBottom(const Card& card) {
-    // Remove from hand (assuming it's there)
     auto it = find(hand.begin(), hand.end(), card);
     if (it != hand.end()) {
         hand.erase(it);
     }
-
     drawPile.push_back(card);
 }
 
@@ -57,16 +54,7 @@ void Deck::addToDraw(const Card& card) {
 }
 
 void Deck::printStatus() const {
-    cout << "Deck status:\n";
-    cout << "  Draw pile: " << drawPile.size() << "\n";
-    cout << "  Hand: " << hand.size() << " cards\n";
-    cout << "  Discard: " << discardPile.size() << "\n";
-
-    if (!hand.empty()) {
-        cout << "  Hand content: ";
-        for (const auto& c : hand) {
-            cout << c.toString() << " ";
-        }
-        cout << "\n";
-    }
+    cout << "Deck: Draw=" << drawPile.size()
+    << " Hand=" << hand.size()
+    << " Discard=" << discardPile.size() << endl;
 }

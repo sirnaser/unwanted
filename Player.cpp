@@ -1,59 +1,33 @@
 #include "Player.h"
 #include "Board.h"
+#include "Utils.h" // for trim
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
-Player::Player(const string& playerName, PlayerId playerId)
-    : name(playerName), id(playerId) {
-    // Deck and agents will be initialized later
-}
+Player::Player(const string& n, PlayerId i) : name(n), id(i) {}
 
 Player::~Player() {
-    // Clean up owned agents
-    for (Agent* agent : agents) {
-        delete agent;
-    }
-    agents.clear();
-    controlledCells.clear();
+    for (Agent* a : agents) delete a;
 }
 
 void Player::initAgents(const string& agentsFile, Board* board) {
     if (!board) {
-        cout << "Error: Board pointer is null in initAgents" << endl;
+        cout << "Board pointer is null" << endl;
         return;
     }
 
     ifstream file(agentsFile);
     if (!file.is_open()) {
-        cout << "Warning: Could not open agents file: " << agentsFile << endl;
-        cout << "Using fallback default agents" << endl;
-
-        // Fallback: place 3 agents in fixed positions (example)
-        // Adjust coordinates based on your board size
-        Cell* c1 = board->getCell(0, 0);
-        Cell* c2 = board->getCell(0, 1);
-        Cell* c3 = board->getCell(0, 2);
-
-        if (c1) {
-            Agent* a1 = new Agent(AgentType::SCOUT, id);
-            c1->agents.push_back(a1);
-            a1->position = c1;
-            agents.push_back(a1);
+        cout << "Agents file not found: " << agentsFile << " - using fallback" << endl;
+        // fallback: 3 agents in top-left cells
+        if (Cell* c = board->getCell(0, 0)) {
+            Agent* a = new Agent(AgentType::SCOUT, id);
+            c->agents.push_back(a);
+            a->position = c;
+            agents.push_back(a);
         }
-        if (c2) {
-            Agent* a2 = new Agent(AgentType::SNIPER, id);
-            c2->agents.push_back(a2);
-            a2->position = c2;
-            agents.push_back(a2);
-        }
-        if (c3) {
-            Agent* a3 = new Agent(AgentType::SERGEANT, id);
-            c3->agents.push_back(a3);
-            a3->position = c3;
-            agents.push_back(a3);
-        }
-
+        // add more if needed
         return;
     }
 
@@ -62,53 +36,44 @@ void Player::initAgents(const string& agentsFile, Board* board) {
         line = trim(line);
         if (line.empty()) continue;
 
-        // Expected format example: A04:A,Sniper
         size_t colon = line.find(':');
         if (colon == string::npos) continue;
 
         string cellId = trim(line.substr(0, colon));
-        string rest   = trim(line.substr(colon + 1));
+        string rest = trim(line.substr(colon + 1));
 
         size_t comma = rest.find(',');
         if (comma == string::npos) continue;
 
         string ownerStr = trim(rest.substr(0, comma));
-        string typeStr  = trim(rest.substr(comma + 1));
+        string typeStr = trim(rest.substr(comma + 1));
 
-        // Only process agents for this player
-        char ownerChar = toupper(ownerStr[0]);
+        char ownerChar = toupper(ownerStr.empty() ? ' ' : ownerStr[0]);
         if ((ownerChar == 'A' && id != PlayerId::PLAYER1) ||
-            (ownerChar == 'B' && id != PlayerId::PLAYER2)) {
-            continue;
-        }
+            (ownerChar == 'B' && id != PlayerId::PLAYER2)) continue;
 
-        Cell* targetCell = board->getCell(cellId);
-        if (!targetCell) {
-            cout << "Warning: Cell not found for agent: " << cellId << endl;
+        Cell* target = board->getCell(cellId);
+        if (!target) {
+            cout << "Cell not found: " << cellId << endl;
             continue;
         }
 
         AgentType atype = AgentType::SCOUT;
-        if (typeStr == "Sniper")    atype = AgentType::SNIPER;
+        if (typeStr == "Sniper") atype = AgentType::SNIPER;
         else if (typeStr == "Seargeant" || typeStr == "Sergeant") atype = AgentType::SERGEANT;
 
-        Agent* newAgent = new Agent(atype, id);
-        targetCell->agents.push_back(newAgent);
-        newAgent->position = targetCell;
-        agents.push_back(newAgent);
+        Agent* agent = new Agent(atype, id);
+        target->agents.push_back(agent);
+        agent->position = target;
+        agents.push_back(agent);
     }
 
     file.close();
-    cout << "Player " << name << " initialized " << agents.size() << " agents." << endl;
 }
 
-bool Player::hasWon(const WinCondition& winCond) const {
-    if (winCond.type == "eliminate") {
-        return agents.empty();
-    }
-    else if (winCond.type == "control") {
-        return controlledCells.size() >= static_cast<size_t>(winCond.value);
-    }
+bool Player::hasWon(const WinCondition& wc) const {
+    if (wc.type == "eliminate") return agents.empty();
+    if (wc.type == "control") return controlledCells.size() >= static_cast<size_t>(wc.value);
     return false;
 }
 
@@ -119,8 +84,6 @@ string Player::getStatus() const {
 
 int Player::getLivingAgentsCount() const {
     int count = 0;
-    for (const Agent* a : agents) {
-        if (a->hp > 0) count++;
-    }
+    for (const Agent* a : agents) if (a->hp > 0) count++;
     return count;
 }

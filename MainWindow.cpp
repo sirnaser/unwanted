@@ -208,11 +208,10 @@ void MainWindow::onStartGameClicked() {
     }
 
     string mapFile = "resources/boards/" + mapList->currentItem()->text().toStdString();
-    engine.init(mapFile, "resources/boards/2.txt");
+    engine.init(mapFile);
 
-    // Set real names
-    engine.players[0].name = n1;
-    engine.players[1].name = n2;
+    engine.setPlayerName(0, n1);
+    engine.setPlayerName(1, n2);
 
     switchToState(AppState::GAME);
 }
@@ -270,8 +269,8 @@ void MainWindow::updateCardsUI() {
 }
 
 void MainWindow::updateHUD() {
-    player1HUD->setText(QString("Player 1: %1").arg(QString::fromStdString(engine.players[0].getStatus())));
-    player2HUD->setText(QString("Player 2: %1").arg(QString::fromStdString(engine.players[1].getStatus())));
+    player1HUD->setText(QString("Player 1: %1").arg(QString::fromStdString(engine.getCurrentPlayer().getStatus())));
+    player2HUD->setText(QString("Player 2: %1").arg(QString::fromStdString(engine.getOpponent().getStatus())));
     statusLabel->setText(QString::fromStdString(engine.getTurnStatus()));
 }
 

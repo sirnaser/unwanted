@@ -10,20 +10,24 @@
 
 using namespace std;
 
+class Board; // forward declaration
+
 class Player {
 public:
     string name;
     PlayerId id;
     Deck deck;
-    vector<Agent*> agents;           // Owned units on the board
-    set<Cell*> controlledCells;      // Cells under this player's control
+    vector<Agent*> agents;
+    set<Cell*> controlledCells;
 
-    Player(const string& playerName, PlayerId playerId);
+    Player(const string& n, PlayerId i);
+
     void initAgents(const string& agentsFile, Board* board);
-    bool hasWon(const WinCondition& winCond) const;
 
+    bool hasWon(const WinCondition& wc) const;
     string getStatus() const;
     int getLivingAgentsCount() const;
+
     ~Player();
 };
 

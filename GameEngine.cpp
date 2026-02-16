@@ -3,114 +3,122 @@
 #include <random>
 #include <algorithm>
 
+string actionToString(ActionType a) {
+    switch (a) {
+    case ActionType::MOVE:    return "MOVE";
+    case ActionType::ATTACK:  return "ATTACK";
+    case ActionType::SCOUT:   return "SCOUT";
+    case ActionType::CONTROL: return "CONTROL";
+    case ActionType::RELEASE: return "RELEASE";
+    default:                  return "UNKNOWN";
+    }
+}
+
 GameEngine::GameEngine() {
     players.emplace_back("Player A", PlayerId::PLAYER1);
     players.emplace_back("Player B", PlayerId::PLAYER2);
 }
 
-void GameEngine::init(const string& boardFile, const string& initFile, const string& configFile) {
-    // Load win condition
+void GameEngine::init(const string& boardFile, const string& configFile) {
     winCond = Config::load(configFile);
+    board.load(boardFile, "resources/boards/2.txt");
 
-    // Load board + initial agents/marks/controls
-    board.load(boardFile, initFile);
-
-    // Assign agents to players (from board)
     for (Cell* cell : board.getAllCells()) {
         for (Agent* agent : cell->agents) {
-            if (agent->owner == PlayerId::PLAYER1) {
-                players[0].agents.push_back(agent);
-            } else if (agent->owner == PlayerId::PLAYER2) {
-                players[1].agents.push_back(agent);
-            }
+            if (agent->owner == PlayerId::PLAYER1) players[0].agents.push_back(agent);
+            else if (agent->owner == PlayerId::PLAYER2) players[1].agents.push_back(agent);
         }
     }
-
-    cout << "GameEngine initialized with board and win condition." << endl;
 }
 
 void GameEngine::startGame() {
-    // Init and shuffle decks for both players
     for (Player& p : players) {
         p.deck.initDefault();
         p.deck.shuffle();
-
-        // Optional: draw initial hand (e.g. 4 cards)
         for (int i = 0; i < 4; ++i) {
-            if (!p.deck.drawPile.empty()) {
-                p.deck.draw();
-            }
+            if (!p.deck.drawPile.empty()) p.deck.draw();
         }
     }
-
-    // Player 1 starts
     currentTurn = 0;
-
-    cout << "Game started. " << players[0].name << " begins." << endl;
 }
 
 void GameEngine::nextTurn() {
     currentTurn = 1 - currentTurn;
-
-    // Draw a card for the new current player
     Player& p = getCurrentPlayer();
-    if (!p.deck.drawPile.empty() || !p.deck.discardPile.empty()) {
-        p.deck.draw();
-    }
-
-    cout << "Turn switched to " << p.name << endl;
+    p.deck.draw();
 }
 
 bool GameEngine::performAction(ActionType action, Cell* fromCell, Cell* toCell) {
     if (!fromCell || fromCell->agents.empty()) return false;
 
     Agent* agent = fromCell->agents[0];
-    PlayerId mover = agent->owner;
-    if (mover != getCurrentPlayer().id) return false;
+    if (agent->owner != getCurrentPlayer().id) return false;
 
     if (action == ActionType::MOVE) {
-        if (!toCell || toCell == fromCell) return false;
+        if (!toCell) return false;
+        auto path = bfsShortestPath(fromCell, toCell, agent->owner);
+        if (path.empty() || path.size() > 3) return false;
 
-        // Check if path exists and is visible
-        vector<Cell*> path = bfsShortestPath(fromCell, toCell, mover);
-        if (path.empty() || path.size() > 2) return false;  // simple limit for now
-
-        // Move agent
         fromCell->agents.clear();
         toCell->agents.push_back(agent);
         agent->position = toCell;
-
-        cout << agent->toString() << " moved from " << fromCell->id << " to " << toCell->id << endl;
         return true;
     }
 
     if (action == ActionType::SCOUT) {
-        if (!toCell) return false;
-
-        // Scout reveals cell
-        toCell->markVisible(mover);
-
-        cout << "Scouted cell " << toCell->id << endl;
+        if (toCell) toCell->markVisible(agent->owner);
         return true;
     }
 
-    // TODO: ATTACK, CONTROL, RELEASE
-    cout << "Action " << action << " not implemented yet" << endl;
-    return false;
-}
+    if (action == ActionType::ATTACK) {
+        if (!toCell || toCell->agents.empty()) return false;
+        Agent* target = toCell->agents[0];
+        if (target->owner == agent->owner) return false;
 
-bool GameEngine::checkWin() const {
-    for (const Player& p : players) {
-        if (p.hasWon(winCond)) {
-            cout << p.name << " has won!" << endl;
+        auto path = bfsShortestPath(fromCell, toCell, agent->owner);
+        if (path.empty()) return false;
+
+        int attackValue = target->hp;
+        for (size_t i = 1; i < path.size(); ++i) {
+            attackValue += path[i]->terrain;
+        }
+
+        random_device rd;
+        mt19937 gen(rd());
+        uniform_int_distribution<int> d10(1, 10);
+        int roll = d10(gen) + d10(gen) + d10(gen);
+
+        cout << "Attack roll: " << roll << " vs " << attackValue << endl;
+
+        if (roll >= attackValue) {
+            Player& opp = getOpponent();
+            ActionType expected;
+            if (target->type == AgentType::SCOUT) expected = ActionType::SCOUT;
+            else if (target->type == AgentType::SNIPER) expected = ActionType::ATTACK;
+            else expected = ActionType::CONTROL;
+
+            for (auto it = opp.deck.hand.begin(); it != opp.deck.hand.end(); ++it) {
+                if (it->type == expected) {
+                    opp.deck.discardToBottom(*it);
+                    opp.deck.hand.erase(it);
+                    cout << "Attack success - card removed" << endl;
+                    return true;
+                }
+            }
+            target->takeDamage(1);
+            cout << "Attack hit (1 dmg)" << endl;
             return true;
         }
+        cout << "Attack missed" << endl;
+        return true;
     }
+
+    cout << "Action " << actionToString(action) << " not implemented" << endl;
     return false;
 }
 
 vector<Cell*> GameEngine::bfsShortestPath(Cell* start, Cell* goal, PlayerId mover) {
-    if (!start || !goal || start == goal) return {};
+    if (!start || !goal) return {};
 
     unordered_map<Cell*, Cell*> cameFrom;
     unordered_map<Cell*, int> dist;
@@ -121,41 +129,33 @@ vector<Cell*> GameEngine::bfsShortestPath(Cell* start, Cell* goal, PlayerId move
     dist[start] = 0;
 
     while (!q.empty()) {
-        Cell* current = q.front();
-        q.pop();
-
-        if (current == goal) {
-            // Reconstruct path
+        Cell* curr = q.front(); q.pop();
+        if (curr == goal) {
             vector<Cell*> path;
-            Cell* step = goal;
-            while (step != start) {
-                path.push_back(step);
-                step = cameFrom[step];
+            for (Cell* at = goal; at != start; at = cameFrom[at]) {
+                path.push_back(at);
             }
             path.push_back(start);
             reverse(path.begin(), path.end());
             return path;
         }
 
-        for (Cell* neighbor : board.getNeighbors(current)) {
-            if (dist.find(neighbor) == dist.end() &&
-                neighbor->isVisibleFor(mover)) {  // only visible cells
-                q.push(neighbor);
-                cameFrom[neighbor] = current;
-                dist[neighbor] = dist[current] + 1;
+        for (Cell* n : board.getNeighbors(curr)) {
+            if (dist.find(n) == dist.end() && n->isVisibleFor(mover)) {
+                q.push(n);
+                cameFrom[n] = curr;
+                dist[n] = dist[curr] + 1;
             }
         }
     }
-
-    return {};  // no path
+    return {};
 }
 
-int GameEngine::calculateTerrainSum(const vector<Cell*>& path, Agent* target) const {
-    int sum = target->hp;  // base
-    for (Cell* cell : path) {
-        sum += cell->terrain;
+bool GameEngine::checkWin() const {
+    for (const auto& p : players) {
+        if (p.hasWon(winCond)) return true;
     }
-    return sum;
+    return false;
 }
 
 string GameEngine::getTurnStatus() const {
@@ -163,8 +163,11 @@ string GameEngine::getTurnStatus() const {
 }
 
 void GameEngine::printGameState() const {
-    cout << "Current turn: " << getCurrentPlayer().name << endl;
-    board.print();
-    cout << "Player1 agents: " << players[0].agents.size() << endl;
-    cout << "Player2 agents: " << players[1].agents.size() << endl;
+    cout << getTurnStatus() << "\n";
+}
+
+void GameEngine::setPlayerName(int index, const string& name) {
+    if (index == 0 || index == 1) {
+        players[index].name = name;
+    }
 }

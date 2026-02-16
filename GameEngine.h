@@ -7,6 +7,8 @@
 #include "Types.h"
 #include <queue>
 #include <unordered_map>
+#include <vector>
+#include <string>
 
 using namespace std;
 
@@ -23,27 +25,28 @@ private:
         vector<Cell*> path;
     };
 
-    vector<Cell*> bfsShortestPath(Cell* start, Cell* end, PlayerId mover);
-
-    int calculateTerrainSum(const vector<Cell*>& path, Agent* target);
+    vector<Cell*> bfsShortestPath(Cell* start, Cell* goal, PlayerId mover);
+    int calculateTerrainSum(const vector<Cell*>& path, Agent* target) const;
 
 public:
     GameEngine();
 
-    void init(const string& boardFile = "resources/boards/board1.txt",
+    void init(const string& boardFile = "resources/boards/1.txt",
               const string& configFile = "resources/config.txt");
 
     void startGame();
-
     void nextTurn();
-
     bool performAction(ActionType action, Cell* fromCell, Cell* toCell = nullptr);
-
     bool checkWin() const;
 
-    Player& getCurrentPlayer() { return players[currentTurn]; }
-    const Player& getCurrentPlayer() const { return players[currentTurn]; }
-    const Player& getOpponent() const { return players[1 - currentTurn]; }
+    Player& getCurrentPlayer();
+    const Player& getCurrentPlayer() const;
+
+    Player& getOpponent();
+    const Player& getOpponent() const;
+
+    void setPlayerName(int index, const string& name);
+
     const Board& getBoard() const { return board; }
     int getCurrentTurnIndex() const { return currentTurn; }
     string getTurnStatus() const;

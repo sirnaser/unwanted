@@ -1,0 +1,3 @@
+# Undaunted win condition config
+win_type=control
+win_value=7
